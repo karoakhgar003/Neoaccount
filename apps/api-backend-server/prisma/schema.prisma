@@ -1,0 +1,200 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Category {
+  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())
+  name      String?
+  slug      String?
+  sort      Int?
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  createdAt            DateTime              @default(now())
+  description          String?
+  entitlements         Entitlement[]
+  id                   String                @id @default(cuid())
+  images               String?
+  isSpecialTotpProduct Boolean?
+  meta                 Json?
+  orderItems           OrderItem[]
+  slug                 String?
+  status               EnumProductStatus?
+  title                String?
+  typeField            EnumProductTypeField?
+  updatedAt            DateTime              @updatedAt
+  variants             Variant[]
+}
+
+model TotpControl {
+  blockedUntil     DateTime?
+  createdAt        DateTime     @default(now())
+  deviceHash       String?
+  entitlement      Entitlement? @relation(fields: [entitlementId], references: [id])
+  entitlementId    String?
+  flags            Json?
+  id               String       @id @default(cuid())
+  totpCount7d      Int?
+  totpCountDay     Int?
+  totpLastIssuedAt DateTime?
+  updatedAt        DateTime     @updatedAt
+  user             User?        @relation(fields: [userId], references: [id])
+  userId           String?
+}
+
+model BlogPost {
+  content     String?
+  coverUrl    String?
+  createdAt   DateTime  @default(now())
+  excerpt     String?
+  id          String    @id @default(cuid())
+  publishedAt DateTime?
+  slug        String?
+  tags        String?
+  title       String?
+  updatedAt   DateTime  @updatedAt
+}
+
+model Entitlement {
+  accountId    String?
+  createdAt    DateTime               @default(now())
+  expiryDate   DateTime?
+  id           String                 @id @default(cuid())
+  product      Product?               @relation(fields: [productId], references: [id])
+  productId    String?
+  purchaseDate DateTime?
+  status       EnumEntitlementStatus?
+  totpControls TotpControl[]
+  updatedAt    DateTime               @updatedAt
+  user         User?                  @relation(fields: [userId], references: [id])
+  userId       String?
+}
+
+model OrderItem {
+  createdAt     DateTime @default(now())
+  id            String   @id @default(cuid())
+  meta          Json?
+  order         Order?   @relation(fields: [orderId], references: [id])
+  orderId       String?
+  product       Product? @relation(fields: [productId], references: [id])
+  productId     String?
+  qty           Int?
+  titleSnapshot String?
+  unitPrice     Int?
+  updatedAt     DateTime @updatedAt
+  variant       Variant? @relation(fields: [variantId], references: [id])
+  variantId     String?
+}
+
+model Order {
+  createdAt       DateTime         @default(now())
+  currency        String?
+  deliveredAt     DateTime?
+  id              String           @id @default(cuid())
+  invoiceId       String?
+  orderItems      OrderItem[]
+  paymentIntentId String?
+  paymentProvider String?
+  status          EnumOrderStatus?
+  total           Int?
+  updatedAt       DateTime         @updatedAt
+  user            User?            @relation(fields: [userId], references: [id])
+  userId          String?
+}
+
+model Variant {
+  active     Boolean?
+  createdAt  DateTime    @default(now())
+  currency   String?
+  id         String      @id @default(cuid())
+  name       String?
+  orderItems OrderItem[]
+  price      Int?
+  product    Product?    @relation(fields: [productId], references: [id])
+  productId  String?
+  sku        String?
+  stock      Int?
+  updatedAt  DateTime    @updatedAt
+}
+
+model AuditLog {
+  action     String?
+  actorId    String?
+  actorType  EnumAuditLogActorType?
+  afterJson  Json?
+  beforeJson Json?
+  createdAt  DateTime               @default(now())
+  entity     String?
+  entityId   String?
+  id         String                 @id @default(cuid())
+  ip         String?
+  ua         String?
+  updatedAt  DateTime               @updatedAt
+}
+
+model AccountPool {
+  assignedAt       DateTime?
+  assignedToUserId String?
+  createdAt        DateTime               @default(now())
+  id               String                 @id @default(cuid())
+  notes            String?
+  passwordEnc      String?
+  status           EnumAccountPoolStatus?
+  totpSecretEnc    String?
+  updatedAt        DateTime               @updatedAt
+  username         String?
+}
+
+model User {
+  createdAt      DateTime      @default(now())
+  email          String?       @unique
+  entitlements   Entitlement[]
+  firstName      String?
+  id             String        @id @default(cuid())
+  lastLoginAt    DateTime?
+  lastName       String?
+  orders         Order[]
+  password       String
+  passwordHash   String?
+  role           EnumUserRole?
+  roles          Json
+  telegramChatId String?
+  totpControls   TotpControl[]
+  updatedAt      DateTime      @updatedAt
+  username       String        @unique
+}
+
+enum EnumProductStatus {
+  Option1
+}
+
+enum EnumProductTypeField {
+  Option1
+}
+
+enum EnumEntitlementStatus {
+  Option1
+}
+
+enum EnumOrderStatus {
+  Option1
+}
+
+enum EnumAuditLogActorType {
+  Option1
+}
+
+enum EnumAccountPoolStatus {
+  Option1
+}
+
+enum EnumUserRole {
+  Option1
+}
